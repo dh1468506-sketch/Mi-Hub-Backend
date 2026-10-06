@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request
 import requests, os, base64, json
+from urllib.parse import quote
 
 app = FastAPI()
 
@@ -63,19 +64,24 @@ def actualizar_index(nombre, juego, path):
     else:
         index = []
         sha = None
+    
+    # Codificar el path para que los espacios se conviertan en %20
+    path_seguro = quote(path)
+    
     encontrado = False
     for item in index:
         if item['nombre'] == nombre:
             item['juego'] = juego
-            item['url'] = f"https://raw.githubusercontent.com/{REPO}/main/{path}"
+            item['url'] = f"https://raw.githubusercontent.com/{REPO}/main/{path_seguro}"
             encontrado = True
             break
     if not encontrado:
         index.append({
             "nombre": nombre,
             "juego": juego,
-            "url": f"https://raw.githubusercontent.com/{REPO}/main/{path}"
+            "url": f"https://raw.githubusercontent.com/{REPO}/main/{path_seguro}"
         })
+    
     nuevo_content = base64.b64encode(json.dumps(index, indent=2).encode()).decode()
     data = {"message": "Update index", "content": nuevo_content}
     if sha:
